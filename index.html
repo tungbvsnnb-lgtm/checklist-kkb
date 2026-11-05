@@ -1,0 +1,1025 @@
+﻿<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bảng Kiểm Tương Tác - BV Sản Nhi Ninh Bình</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Font Inter -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        medical: {
+                            50: '#f0fdfa',
+                            100: '#ccfbf1',
+                            500: '#14b8a6',
+                            600: '#0d9488',
+                            700: '#0f766e',
+                            800: '#115e59',
+                            900: '#134e4a',
+                        }
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        @media print {
+            .no-print { display: none !important; }
+            .print-only { display: block !important; }
+            body { background: white !important; color: black !important; }
+            .card-box { border: 1px solid #ccc !important; shadow: none !important; }
+        }
+        /* Custom scrollbar */
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: #f1f1f1; }
+        ::-webkit-scrollbar-thumb { background: #0d9488; border-radius: 3px; }
+        ::-webkit-scrollbar-thumb:hover { background: #0f766e; }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-800 font-sans min-h-screen flex flex-col selection:bg-teal-500 selection:text-white">
+
+    <!-- HEADER / NAVIGATION BAR -->
+    <header class="bg-gradient-to-r from-teal-800 via-teal-700 to-cyan-800 text-white shadow-lg sticky top-0 z-40">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3">
+            <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
+                <div class="flex items-center space-x-3">
+                    <div class="p-2 bg-white/10 backdrop-blur-md rounded-xl border border-white/20">
+                        <i data-lucide="activity" class="w-7 h-7 text-teal-200"></i>
+                    </div>
+                    <div>
+                        <h1 class="text-xs uppercase tracking-widest text-teal-200 font-semibold">BỆNH VIỆN SẢN NHI TỈNH NINH BÌNH</h1>
+                        <h2 class="text-lg md:text-xl font-bold tracking-tight">KHOA KHÁM BỆNH - BẢNG KIỂM TƯƠNG TÁC HÀNG NGÀY</h2>
+                    </div>
+                </div>
+                <!-- Navigation Tabs -->
+                <div class="flex items-center space-x-2 bg-teal-900/40 p-1 rounded-xl border border-teal-600/30 self-start md:self-auto">
+                    <button id="btn-tab-checklist" onclick="switchTab('checklist')" class="px-4 py-2 rounded-lg text-sm font-medium transition-all flex items-center space-x-2 bg-white text-teal-800 shadow">
+                        <i data-lucide="check-square" class="w-4 h-4"></i>
+                        <span>Checklist Công Việc</span>
+                    </button>
+                    <button id="btn-tab-dashboard" onclick="switchTab('dashboard')" class="px-4 py-2 rounded-lg text-sm font-medium transition-all flex items-center space-x-2 text-teal-100 hover:bg-teal-700/50">
+                        <i data-lucide="bar-chart-3" class="w-4 h-4"></i>
+                        <span>Dashboard & Báo Cáo</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- MAIN CONTAINER -->
+    <main class="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6">
+
+        <!-- GLOBAL CONTROL PANEL -->
+        <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-4 md:p-5 mb-6 no-print">
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                
+                <!-- Date Picker -->
+                <div>
+                    <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">
+                        <i data-lucide="calendar" class="w-3.5 h-3.5 inline mr-1 text-teal-600"></i>Ngày Kiểm Tra
+                    </label>
+                    <input type="date" id="select-date" class="w-full bg-slate-50 border border-slate-300 text-slate-800 text-sm rounded-xl focus:ring-2 focus:ring-teal-500 focus:border-teal-500 p-2.5 font-medium transition" onchange="handleFilterChange()">
+                </div>
+
+                <!-- Staff Filter -->
+                <div>
+                    <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">
+                        <i data-lucide="user" class="w-3.5 h-3.5 inline mr-1 text-teal-600"></i>Lọc Theo Nhân Viên
+                    </label>
+                    <select id="select-staff" class="w-full bg-slate-50 border border-slate-300 text-slate-800 text-sm rounded-xl focus:ring-2 focus:ring-teal-500 focus:border-teal-500 p-2.5 font-medium transition" onchange="handleFilterChange()">
+                        <option value="ALL">-- Tất cả Nhân viên --</option>
+                    </select>
+                </div>
+
+                <!-- Section/Area Filter -->
+                <div>
+                    <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">
+                        <i data-lucide="map-pin" class="w-3.5 h-3.5 inline mr-1 text-teal-600"></i>Lọc Theo Khu Vực / Bộ Phận
+                    </label>
+                    <select id="select-section" class="w-full bg-slate-50 border border-slate-300 text-slate-800 text-sm rounded-xl focus:ring-2 focus:ring-teal-500 focus:border-teal-500 p-2.5 font-medium transition" onchange="handleFilterChange()">
+                        <option value="ALL">-- Tất cả Các Khu Vực (10 Khu) --</option>
+                    </select>
+                </div>
+
+            </div>
+
+            <!-- Quick Progress Bar Banner -->
+            <div class="mt-4 pt-4 border-t border-slate-100 flex flex-col md:flex-row md:items-center justify-between gap-3">
+                <div class="flex items-center space-x-4">
+                    <div class="text-sm">
+                        <span class="text-slate-500">Tiến độ tổng thể:</span>
+                        <span id="banner-progress-text" class="font-bold text-teal-700 ml-1">0/0 (0%)</span>
+                    </div>
+                    <div class="w-32 md:w-48 bg-slate-100 rounded-full h-2.5 overflow-hidden">
+                        <div id="banner-progress-bar" class="bg-teal-600 h-2.5 rounded-full transition-all duration-300" style="width: 0%"></div>
+                    </div>
+                </div>
+
+                <div class="flex items-center space-x-2">
+                    <button onclick="exportSummaryModal()" class="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold rounded-lg transition flex items-center space-x-1">
+                        <i data-lucide="file-text" class="w-3.5 h-3.5"></i>
+                        <span>Tóm Tắt Báo Cáo</span>
+                    </button>
+                    <button onclick="window.print()" class="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold rounded-lg transition flex items-center space-x-1">
+                        <i data-lucide="printer" class="w-3.5 h-3.5"></i>
+                        <span>In Trang</span>
+                    </button>
+                    <button onclick="resetCurrentViewData()" class="px-3 py-1.5 bg-rose-50 hover:bg-rose-100 text-rose-700 text-xs font-semibold rounded-lg transition flex items-center space-x-1 border border-rose-200">
+                        <i data-lucide="rotate-ccw" class="w-3.5 h-3.5"></i>
+                        <span>Đặt Lại</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- VIEW 1: CHECKLIST LIST VIEW -->
+        <div id="tab-content-checklist" class="space-y-6">
+            <div id="checklist-container" class="space-y-6">
+                <!-- Checklist Sections Will Be Dynamically Rendered Here -->
+            </div>
+        </div>
+
+        <!-- VIEW 2: DASHBOARD & REPORT VIEW -->
+        <div id="tab-content-dashboard" class="hidden space-y-6">
+            
+            <!-- Summary Stats Cards -->
+            <div class="grid grid-cols-2 md:grid-cols-5 gap-4">
+                <div class="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm">
+                    <div class="text-xs font-medium text-slate-500 uppercase">Tổng Công Việc</div>
+                    <div id="stat-total" class="text-2xl font-bold text-slate-800 mt-1">0</div>
+                    <div class="text-xs text-slate-400 mt-1">Hạng mục hiển thị</div>
+                </div>
+                <div class="bg-white p-4 rounded-2xl border border-emerald-200 bg-emerald-50/30 shadow-sm">
+                    <div class="text-xs font-medium text-emerald-700 uppercase">Số Lượng Đạt</div>
+                    <div id="stat-pass" class="text-2xl font-bold text-emerald-600 mt-1">0</div>
+                    <div id="stat-pass-pct" class="text-xs font-semibold text-emerald-600 mt-1">0%</div>
+                </div>
+                <div class="bg-white p-4 rounded-2xl border border-rose-200 bg-rose-50/30 shadow-sm">
+                    <div class="text-xs font-medium text-rose-700 uppercase">Không Đạt (Lỗi)</div>
+                    <div id="stat-fail" class="text-2xl font-bold text-rose-600 mt-1">0</div>
+                    <div id="stat-fail-pct" class="text-xs font-semibold text-rose-600 mt-1">0%</div>
+                </div>
+                <div class="bg-white p-4 rounded-2xl border border-amber-200 bg-amber-50/30 shadow-sm">
+                    <div class="text-xs font-medium text-amber-700 uppercase">Không Áp Dụng (KAD)</div>
+                    <div id="stat-kad" class="text-2xl font-bold text-amber-600 mt-1">0</div>
+                    <div id="stat-kad-pct" class="text-xs font-semibold text-amber-600 mt-1">0%</div>
+                </div>
+                <div class="bg-white p-4 rounded-2xl border border-slate-200 bg-slate-50 shadow-sm col-span-2 md:col-span-1">
+                    <div class="text-xs font-medium text-slate-500 uppercase">Chưa Đánh Giá</div>
+                    <div id="stat-pending" class="text-2xl font-bold text-slate-500 mt-1">0</div>
+                    <div id="stat-pending-pct" class="text-xs font-semibold text-slate-500 mt-1">0%</div>
+                </div>
+            </div>
+
+            <!-- Charts Section -->
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <!-- Chart 1: Staff Performance Bar Chart -->
+                <div class="lg:col-span-2 bg-white p-5 rounded-2xl border border-slate-200 shadow-sm">
+                    <h3 class="text-base font-bold text-slate-800 mb-4 flex items-center">
+                        <i data-lucide="users" class="w-5 h-5 mr-2 text-teal-600"></i>
+                        Tỷ Lệ Hoàn Thành Công Việc Theo Nhân Viên
+                    </h3>
+                    <div class="relative h-72">
+                        <canvas id="chart-staff-performance"></canvas>
+                    </div>
+                </div>
+
+                <!-- Chart 2: Status Breakdown Pie Chart -->
+                <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm">
+                    <h3 class="text-base font-bold text-slate-800 mb-4 flex items-center">
+                        <i data-lucide="pie-chart" class="w-5 h-5 mr-2 text-teal-600"></i>
+                        Phân Bố Trạng Thái Overall
+                    </h3>
+                    <div class="relative h-72 flex items-center justify-center">
+                        <canvas id="chart-status-pie"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Failures / Issues Log Table -->
+            <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+                <div class="p-5 border-b border-slate-100 flex items-center justify-between">
+                    <h3 class="text-base font-bold text-slate-800 flex items-center">
+                        <i data-lucide="alert-triangle" class="w-5 h-5 mr-2 text-rose-500"></i>
+                        Danh Sách Hạng Mục Không Đạt & Lý Do Khắc Phục
+                    </h3>
+                    <span id="fail-count-badge" class="px-2.5 py-1 bg-rose-100 text-rose-700 font-bold text-xs rounded-full">0 sự cố</span>
+                </div>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left border-collapse">
+                        <thead>
+                            <tr class="bg-slate-50 border-b border-slate-200 text-xs font-semibold text-slate-500 uppercase tracking-wider">
+                                <th class="p-3">Khu Vực</th>
+                                <th class="p-3">Nhân Viên</th>
+                                <th class="p-3">Khung Giờ</th>
+                                <th class="p-3">Nội Dung Công Việc</th>
+                                <th class="p-3">Lý Do / Ghi Chú Khắc Phục</th>
+                            </tr>
+                        </thead>
+                        <tbody id="fail-table-body" class="divide-y divide-slate-100 text-sm">
+                            <!-- Populated dynamically -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+        </div>
+
+    </main>
+
+    <!-- FOOTER -->
+    <footer class="bg-white border-t border-slate-200 py-4 mt-auto no-print">
+        <div class="max-w-7xl mx-auto px-4 text-center text-xs text-slate-500">
+            © 2026 Bệnh viện Sản Nhi tỉnh Ninh Bình - Khoa Khám Bệnh. Hệ thống Quản lý Bảng kiểm Chuẩn hoá Quy trình.
+        </div>
+    </footer>
+
+    <!-- MODAL: SUMMARY REPORT FOR BRIEFING -->
+    <div id="modal-summary" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
+        <div class="bg-white rounded-2xl shadow-2xl max-w-2xl w-full overflow-hidden flex flex-col max-h-[90vh]">
+            <div class="p-4 bg-teal-800 text-white flex items-center justify-between">
+                <h3 class="font-bold flex items-center text-base">
+                    <i data-lucide="file-spreadsheet" class="w-5 h-5 mr-2 text-teal-300"></i>
+                    Báo Cáo Tóm Tắt Giao Ban
+                </h3>
+                <button onclick="closeSummaryModal()" class="text-white/80 hover:text-white">
+                    <i data-lucide="x" class="w-5 h-5"></i>
+                </button>
+            </div>
+            <div class="p-5 flex-1 overflow-y-auto space-y-4">
+                <p class="text-xs text-slate-500">Sao chép nội dung dưới đây để gửi báo cáo nhanh qua Zalo, Email hoặc sử dụng trong cuộc họp giao ban khoa:</p>
+                <textarea id="summary-text-area" rows="12" class="w-full bg-slate-50 border border-slate-300 rounded-xl p-3 font-mono text-xs text-slate-800 focus:ring-2 focus:ring-teal-500 focus:outline-none"></textarea>
+            </div>
+            <div class="p-4 bg-slate-50 border-t border-slate-200 flex justify-end space-x-3">
+                <button onclick="closeSummaryModal()" class="px-4 py-2 bg-slate-200 hover:bg-slate-300 text-slate-700 text-xs font-semibold rounded-xl transition">
+                    Đóng
+                </button>
+                <button onclick="copySummaryText()" class="px-4 py-2 bg-teal-700 hover:bg-teal-800 text-white text-xs font-semibold rounded-xl transition flex items-center space-x-1">
+                    <i data-lucide="copy" class="w-4 h-4 mr-1"></i>
+                    <span>Sao Chép Báo Cáo</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- JAVASCRIPT APPLICATION LOGIC -->
+    <script>
+        // EMBEDDED COMPLETE DATASET - 89 TASKS ACROSS 10 SECTIONS
+        const CHECKLIST_DATA = [
+            {
+                sectionId: "SEC_1",
+                sectionTitle: "I. CÔNG TÁC QUẢN LÝ, ĐIỀU HÀNH KHOA",
+                assignedStaff: ["Phạm Thị Yến"],
+                items: [
+                    { id: 1, time: "7h15 - 7h30", task: "Kiểm tra sĩ số, tác phong, trang phục y tế của NVYT", standard: "100% NVYT mặc đúng trang phục, đeo biển tên", staff: "Phạm Thị Yến" },
+                    { id: 2, time: "7h30 - 8h00", task: "Chủ trì/tham dự giao ban khoa, phân công nhiệm vụ trong ngày", standard: "Đầy đủ thành phần, phân công rõ ràng", staff: "Phạm Thị Yến" },
+                    { id: 3, time: "8h00 - 9h00", task: "Đi kiểm tra công tác khám bệnh tại các buồng khám, khu đón tiếp", standard: "Các buồng khám hoạt động ổn định, đúng quy trình", staff: "Phạm Thị Yến" },
+                    { id: 4, time: "9h00 - 10h30", task: "Kiểm tra công tác bảo quản, kiểm kê thuốc, vật tư y tế, cơ sở vật chất", standard: "Không thiếu hụt VTYT, trang thiết bị hoạt động tốt", staff: "Phạm Thị Yến" },
+                    { id: 5, time: "10h30 - 11h30", task: "Giải quyết các thắc mắc, khiếu nại của người bệnh (nếu có)", standard: "Xử lý kịp thời, thỏa đáng, đúng quy định", staff: "Phạm Thị Yến" },
+                    { id: 6, time: "13h30 - 14h00", task: "Kiểm tra hoạt động đầu giờ chiều tại các khu vực", standard: "NVYT có mặt đúng giờ, sẵn sàng đón tiếp", staff: "Phạm Thị Yến" },
+                    { id: 7, time: "14h00 - 15h30", task: "Duyệt sổ sách, báo cáo thống kê, kiểm tra hồ sơ bệnh án", standard: "Sổ sách đầy đủ, hồ sơ chính xác", staff: "Phạm Thị Yến" },
+                    { id: 8, time: "15h30 - 16h30", task: "Đánh giá công tác vệ sinh, 5S tại các phòng khám", standard: "Sạch sẽ, gọn gàng, ngăn nắp", staff: "Phạm Thị Yến" },
+                    { id: 9, time: "16h30 - 17h00", task: "Tổng kết công việc ngày, bàn giao ca trực (nếu có)", standard: "Bàn giao đầy đủ, chính xác", staff: "Phạm Thị Yến" }
+                ]
+            },
+            {
+                sectionId: "SEC_2",
+                sectionTitle: "II. KHU TIẾP ĐÓN, ĐO DẤU HIỆU SINH TỒN (SẢNH TẦNG 1)",
+                assignedStaff: ["Nguyễn Thị Hồng Ninh", "Phạm Anh Thư", "Vũ Thị Dung", "Phạm Thị Mai Trang"],
+                items: [
+                    { id: 10, time: "7h00 - 7h15", task: "Mở cửa, bật hệ thống máy tính, máy in, máy xếp hàng tự động, ĐHKK", standard: "Thiết bị hoạt động tốt, sẵn sàng làm việc", staff: "Nguyễn Thị Hồng Ninh" },
+                    { id: 11, time: "7h15 - 7h30", task: "Vệ sinh mặt bàn tiếp đón, chuẩn bị sổ sách, phiếu khám, giấy In", standard: "Sạch sẽ, đầy đủ văn phòng phẩm", staff: "Phạm Anh Thư" },
+                    { id: 12, time: "7h30 - 11h30", task: "Đón tiếp người bệnh, hướng dẫn lấy số thứ tự tự động", standard: "Thái độ niềm nở, hướng dẫn rõ ràng", staff: "Vũ Thị Dung" },
+                    { id: 13, time: "7h30 - 11h30", task: "Nhập thông tin hành chính, đăng ký khám bệnh trên phần mềm HIS", standard: "Thông tin chính xác, không nhầm lẫn", staff: "Phạm Thị Mai Trang" },
+                    { id: 14, time: "7h30 - 11h30", task: "Hướng dẫn đối tượng ưu tiên (Trẻ <6 tuổi, người già, phụ nữ mang thai)", standard: "Thực hiện đúng quy định ưu tiên", staff: "Nguyễn Thị Hồng Ninh" },
+                    { id: 15, time: "7h30 - 11h30", task: "Đo dấu hiệu sinh tồn (Mạch, nhiệt độ, huyết áp, cân nặng, chiều cao)", standard: "Thực hiện chuẩn kỹ thuật, ghi chép chính xác vào HIS", staff: "Phạm Anh Thư" },
+                    { id: 16, time: "7h30 - 11h30", task: "Phân loại người bệnh vào các buồng khám phù hợp", standard: "Phân phòng chính xác theo lý do khám", staff: "Vũ Thị Dung" },
+                    { id: 17, time: "11h30 - 12h00", task: "Kiểm kê, bàn giao phiếu khám, số lượng bệnh nhân buổi sáng", standard: "Số liệu khớp đúng giữa thực tế và phần mềm", staff: "Phạm Thị Mai Trang" },
+                    { id: 18, time: "13h30 - 16h30", task: "Đón tiếp, đo DHST bệnh nhân buổi chiều", standard: "Duy trì quy trình chuẩn như buổi sáng", staff: "Nguyễn Thị Hồng Ninh" },
+                    { id: 19, time: "16h30 - 17h00", task: "Tắt thiết bị điện, vệ sinh khu vực, khóa cửa bàn giao", standard: "An toàn điện nước, sạch sẽ", staff: "Phạm Anh Thư" }
+                ]
+            },
+            {
+                sectionId: "SEC_3",
+                sectionTitle: "III. KHU KHÁM THEO YÊU CẦU (TẦNG 2)",
+                assignedStaff: ["Ngô Thị Vân Anh", "Vũ Thị Thúy Liễu", "Lê Thị Hằng", "Đồng Thị Bích Thảo"],
+                items: [
+                    { id: 20, time: "7h00 - 7h15", task: "Bật thiết bị, kiểm tra máy móc buồng khám VIP/Theo yêu cầu", standard: "Sẵn sàng hoạt động, phòng ốc thơm tho, sạch đẹp", staff: "Ngô Thị Vân Anh" },
+                    { id: 21, time: "7h15 - 7h30", task: "Chuẩn bị trà, nước uống, khăn giấy phục vụ khách hàng VIP", standard: "Đầy đủ, văn minh, lịch sự", staff: "Vũ Thị Thúy Liễu" },
+                    { id: 22, time: "7h30 - 11h30", task: "Đón tiếp ân cần, hướng dẫn người bệnh đăng ký dịch vụ theo yêu cầu", standard: "Thái độ chuẩn mực, chuyên nghiệp, chu đáo", staff: "Lê Thị Hằng" },
+                    { id: 23, time: "7h30 - 11h30", task: "Đo DHST, tư vấn các gói khám bệnh theo yêu cầu", standard: "Tư vấn rõ ràng, chính xác", staff: "Đồng Thị Bích Thảo" },
+                    { id: 24, time: "7h30 - 11h30", task: "Phụ bác sĩ khám, làm thủ thuật chuyên khoa theo yêu cầu", standard: "Thao tác thành thạo, đảm bảo vô khuẩn", staff: "Ngô Thị Vân Anh" },
+                    { id: 25, time: "7h30 - 11h30", task: "Hướng dẫn, đưa bệnh nhân đi làm cận lâm sàng (nếu cần)", standard: "Nhanh chóng, ưu tiên không để bệnh nhân chờ lâu", staff: "Vũ Thị Thúy Liễu" },
+                    { id: 26, time: "11h30 - 12h00", task: "Kiểm tra kết quả CLS, tổng hợp hồ sơ cho BS tư vấn trả kết quả", standard: "Đầy đủ kết quả, chính xác", staff: "Lê Thị Hằng" },
+                    { id: 27, time: "13h30 - 16h30", task: "Thực hiện công tác khám VIP buổi chiều", standard: "Đảm bảo chất lượng dịch vụ cao", staff: "Đồng Thị Bích Thảo" },
+                    { id: 28, time: "16h30 - 17h00", task: "Thu dọn dụng cụ, khử khuẩn bề mặt, chốt số lượng khám", standard: "Dụng cụ tiệt trùng đúng quy trình", staff: "Ngô Thị Vân Anh" }
+                ]
+            },
+            {
+                sectionId: "SEC_4",
+                sectionTitle: "IV. KHU KHÁM BỆNH PHỤ KHOA & SẢN KHOA (SẢNH TẦNG 1)",
+                assignedStaff: ["Lương Thị Thu Hà", "Điền Thị Xuân"],
+                items: [
+                    { id: 29, time: "7h00 - 7h15", task: "Kiểm tra phòng khám Sản, Phụ khoa; chuẩn bị mỏ vịt, dụng cụ vô khuẩn", standard: "Đủ dụng cụ tiệt trùng cho ca làm việc", staff: "Lương Thị Thu Hà" },
+                    { id: 30, time: "7h15 - 7h30", task: "Bật máy siêu âm, máy doppler tim thai, kiểm tra gel siêu âm", standard: "Máy móc hoạt động tốt, đủ vật tư", staff: "Điền Thị Xuân" },
+                    { id: 31, time: "7h30 - 11h30", task: "Calling bệnh nhân vào khám, hỗ trợ thai phụ/bệnh nhân lên giường khám", standard: "Nhẹ nhàng, an toàn cho thai phụ", staff: "Lương Thị Thu Hà" },
+                    { id: 32, time: "7h30 - 11h30", task: "Phụ bác sĩ khám phụ khoa, lấy bệnh phẩm làm xét nghiệm (Pap, soi tươi...)", standard: "Đánh nhãn bệnh phẩm chính xác 100%", staff: "Điền Thị Xuân" },
+                    { id: 33, time: "7h30 - 11h30", task: "Nghe tim thai, đo bề cao tử cung, vòng bụng cho thai phụ", standard: "Ghi chép chính xác vào sổ theo dõi thai", staff: "Lương Thị Thu Hà" },
+                    { id: 34, time: "7h30 - 11h30", task: "Hướng dẫn bệnh nhân tư thế làm thủ thuật, đảm bảo riêng tư (kéo rèm)", standard: "Tế nhị, đảm bảo kín đáo cho BN", staff: "Điền Thị Xuân" },
+                    { id: 35, time: "11h30 - 12h00", task: "Gom dụng cụ bẩn đưa đi ngâm rửa tiệt trùng, lau bàn khám", standard: "Tuân thủ phân loại rác & xử lý dụng cụ", staff: "Lương Thị Thu Hà" },
+                    { id: 36, time: "13h30 - 16h30", task: "Phụ khám Sản/Phụ khoa buổi chiều", standard: "Thực hiện nghiêm túc quy trình", staff: "Điền Thị Xuân" },
+                    { id: 37, time: "16h30 - 17h00", task: "Bàn giao bệnh phẩm cuối ngày, tổng vệ sinh phòng khám", standard: "Không bỏ sót bệnh phẩm, phòng khám sạch", staff: "Lương Thị Thu Hà" }
+                ]
+            },
+            {
+                sectionId: "SEC_5",
+                sectionTitle: "V. KHU KHÁM TRẺ EM / NHI KHOA (SẢNH TẦNG 2)",
+                assignedStaff: ["Lê Thị Vân", "Phạm Thị Ánh Tuyết", "Đinh Bảo Ngọc"],
+                items: [
+                    { id: 38, time: "7h00 - 7h15", task: "Kiểm tra phòng khám Nhi, máy đè lưỡi, tai mũi họng, nhiệt kế hồng ngoại", standard: "Sẵn sàng, sạch sẽ, an toàn cho trẻ", staff: "Lê Thị Vân" },
+                    { id: 39, time: "7h15 - 7h30", task: "Lau chùi đồ chơi, góc vui chơi của trẻ (nếu có)", standard: "Khử khuẩn an toàn", staff: "Phạm Thị Ánh Tuyết" },
+                    { id: 40, time: "7h30 - 11h30", task: "Đón tiếp bệnh nhi, hỗ trợ dỗ dành trẻ, đo cân nặng, chiều cao", standard: "Thân thiện, tạo tâm lý thoải mái cho trẻ", staff: "Đinh Bảo Ngọc" },
+                    { id: 41, time: "7h30 - 11h30", task: "Đo nhiệt độ, SpO2, đếm nhịp thở cho trẻ nguy cơ", standard: "Phát hiện sớm dấu hiệu chuyển nặng", staff: "Lê Thị Vân" },
+                    { id: 42, time: "7h30 - 11h30", task: "Phụ bác sĩ Nhi khám, giữ trẻ đúng tư thế khi khám TMH, hô hấp", standard: "An toàn, tránh làm tổn thương trẻ", staff: "Phạm Thị Ánh Tuyết" },
+                    { id: 43, time: "7h30 - 11h30", task: "Hướng dẫn người nhà cách cho trẻ uống thuốc, chăm sóc tại nhà", standard: "Tư vấn rõ ràng, dễ hiểu", staff: "Đinh Bảo Ngọc" },
+                    { id: 44, time: "11h30 - 12h00", task: "Vệ sinh đè lưỡi gỗ/dùng 1 lần, sát khuẩn giường khám Nhi", standard: "Đảm bảo chống nhiễm khuẩn chéo", staff: "Lê Thị Vân" },
+                    { id: 45, time: "13h30 - 16h30", task: "Khám Nhi buổi chiều, theo dõi trẻ chờ KQ xét nghiệm", standard: "Sát sao, an toàn", staff: "Phạm Thị Ánh Tuyết" },
+                    { id: 46, time: "16h30 - 17h00", task: "Tắt đèn, điều hòa, tổng vệ sinh phòng khám Nhi", standard: "Gọn gàng, ngăn nắp", staff: "Đinh Bảo Ngọc" }
+                ]
+            },
+            {
+                sectionId: "SEC_6",
+                sectionTitle: "VI. KHU THUẬT - PHÒNG THỦ THUẬT SẢN PHỤ KHOA",
+                assignedStaff: ["Đào Thị Ánh", "Trịnh Thanh Phúc"],
+                items: [
+                    { id: 47, time: "7h00 - 7h15", task: "Kiểm tra phòng thủ thuật: Máy hút, đèn mổ, hệ thống oxy, máy Monitor", standard: "Tất cả thiết bị sẵn sàng 100%", staff: "Đào Thị Ánh" },
+                    { id: 48, time: "7h15 - 7h30", task: "Kiểm tra tủ thuốc cấp cứu (hộp chống sốc), gói dụng cụ vô khuẩn", standard: "Đủ số lượng, hạn dùng còn dài", staff: "Trịnh Thanh Phúc" },
+                    { id: 49, time: "7h30 - 11h30", task: "Tiếp nhận BN làm thủ thuật, đối chiếu thông tin (Họ tên, năm sinh, chỉ định)", standard: "Chính xác 100% không nhầm lẫn BN", staff: "Đào Thị Ánh" },
+                    { id: 50, time: "7h30 - 11h30", task: "Chuẩn bị bệnh nhân (sát khuẩn, tư thế), phụ BS làm thủ thuật (Soi cổ tử cung, áp xe, áp lạnh...)", standard: "Đảm bảo vô khuẩn tuyệt đối", staff: "Trịnh Thanh Phúc" },
+                    { id: 51, time: "7h30 - 11h30", task: "Theo dõi mạch, HA, chảy máu của BN sau thủ thuật tại phòng theo dõi", standard: "Ghi chép phiếu theo dõi đầy đủ", staff: "Đào Thị Ánh" },
+                    { id: 52, time: "11h30 - 12h00", task: "Thu gom dụng cụ sắc nhọn, ngâm rửa dụng cụ mổ theo quy định NKYT", standard: "An toàn lao động, không để xảy ra sự cố", staff: "Trịnh Thanh Phúc" },
+                    { id: 53, time: "13h30 - 16h30", task: "Thực hiện thủ thuật ca chiều, theo dõi BN ra về", standard: "Dặn dò chu đáo trước khi ra về", staff: "Đào Thị Ánh" },
+                    { id: 54, time: "16h30 - 17h00", task: "Bật đèn cực tím (UV) tiệt trùng phòng thủ thuật", standard: "Đủ thời gian UV theo quy định", staff: "Trịnh Thanh Phúc" }
+                ]
+            },
+            {
+                sectionId: "SEC_7",
+                sectionTitle: "VII. KHU TIÊN PHÒNG & TÂM LÝ - CẤP CỨU NHI",
+                assignedStaff: ["Nguyễn Thị Hằng Nga", "Bùi Khắc Hưng", "Hoàng Thị Ngọc Hà", "Nguyễn Đình Đức"],
+                items: [
+                    { id: 55, time: "7h00 - 7h15", task: "Kiểm tra tủ lạnh bảo quản vắc xin, nhiệt độ tủ (2°C - 8°C), ghi sổ nhiệt độ", standard: "Nhiệt độ chuẩn, ghi chép đầy đủ", staff: "Nguyễn Thị Hằng Nga" },
+                    { id: 56, time: "7h15 - 7h30", task: "Kiểm tra xe cấp cứu Nhi, máy phun khí dung, máy hút đờm, bình oxy", standard: "Sẵn sàng cấp cứu 24/7", staff: "Bùi Khắc Hưng" },
+                    { id: 57, time: "7h30 - 11h30", task: "Khám phân loại trước tiêm chủng, kiểm tra tiền sử dị ứng của trẻ", standard: "Đúng quy trình an toàn tiêm chủng", staff: "Hoàng Thị Ngọc Hà" },
+                    { id: 58, time: "7h30 - 11h30", task: "Thực hiện tiêm vắc xin đúng 5 đúng, đúng kỹ thuật", standard: "An toàn tiêm chủng tuyệt đối", staff: "Nguyễn Đình Đức" },
+                    { id: 59, time: "7h30 - 11h30", task: "Theo dõi trẻ 30 phút sau tiêm tại phòng theo dõi", standard: "Phát hiện sớm phản ứng sau tiêm", staff: "Nguyễn Thị Hằng Nga" },
+                    { id: 60, time: "7h30 - 11h30", task: "Thực hiện khí dung, xử trí cấp cứu Nhi ban đầu khi có BN nặng", standard: "Nhanh chóng, chính xác theo lệnh BS", staff: "Bùi Khắc Hưng" },
+                    { id: 61, time: "11h30 - 12h00", task: "Thống kê số lượng liều vắc xin đã sử dụng trong sáng, đối soát tủ", standard: "Khớp đúng số lượng vắc xin", staff: "Hoàng Thị Ngọc Hà" },
+                    { id: 62, time: "13h30 - 16h30", task: "Tiêm chủng & theo dõi sau tiêm buổi chiều", standard: "Duy trì quy chuẩn nghiêm ngặt", staff: "Nguyễn Đình Đức" },
+                    { id: 63, time: "16h30 - 17h00", task: "Khóa tủ vắc xin, ghi nhiệt độ tủ lạnh chiều, bàn giao ca", standard: "An toàn vắc xin & tài sản", staff: "Nguyễn Thị Hằng Nga" }
+                ]
+            },
+            {
+                sectionId: "SEC_8",
+                sectionTitle: "VIII. BÀN HƯỚNG DẪN & CHĂM SÓC KHÁCH HÀNG",
+                assignedStaff: ["Nguyễn Thị Thủy", "Hà Thị Thanh Thảo"],
+                items: [
+                    { id: 64, time: "7h00 - 7h15", task: "Có mặt tại bàn hướng dẫn sảnh chính, trang phục chỉnh tề, đeo băng rôn/thẻ CSKH", standard: "Diện mạo chuyên nghiệp, thân thiện", staff: "Nguyễn Thị Thủy" },
+                    { id: 65, time: "7h15 - 7h30", task: "Kiểm tra tờ rơi, brochure hướng dẫn, nước uống phục vụ người bệnh", standard: "Góc CSKH gọn gàng, đủ tài liệu", staff: "Hà Thị Thanh Thảo" },
+                    { id: 66, time: "7h30 - 11h30", task: "Chủ động chào hỏi, hướng dẫn NB luồng di chuyển khám bệnh", standard: "Thái độ niềm nở, câu từ lịch sự", staff: "Nguyễn Thị Thủy" },
+                    { id: 67, time: "7h30 - 11h30", task: "Hỗ trợ xe lăn, đẩy bệnh nhân nặng, người già, khuyết tật", standard: "Tận tình, chu đáo", staff: "Hà Thị Thanh Thảo" },
+                    { id: 68, time: "7h30 - 11h30", task: "Lắng nghe, giải đáp thắc mắc về thủ tục BHYT, giá dịch vụ", standard: "Giải đáp chính xác, dễ hiểu", staff: "Nguyễn Thị Thủy" },
+                    { id: 69, time: "11h30 - 12h00", task: "Ghi nhận ý kiến đóng góp/phản ánh của người bệnh vào sổ CSKH", standard: "Ghi chép trung thực, báo cáo lãnh đạo", staff: "Hà Thị Thanh Thảo" },
+                    { id: 70, time: "13h30 - 16h30", task: "Duy trì hướng dẫn CSKH ca chiều", standard: "Giữ tinh thần thái độ tốt", staff: "Nguyễn Thị Thủy" },
+                    { id: 71, time: "16h30 - 17h00", task: "Tổng hợp số lượt hỗ trợ trong ngày, dọn dẹp bàn CSKH", standard: "Báo cáo đầy đủ", staff: "Hà Thị Thanh Thảo" }
+                ]
+            },
+            {
+                sectionId: "SEC_9",
+                sectionTitle: "IX. KHU KHÁM SẢN/DỊCH VỤ VIP & SAU ĐẺ",
+                assignedStaff: ["Trịnh Thị Thảo", "Lê Thị Thu"],
+                items: [
+                    { id: 72, time: "7h00 - 7h15", task: "Kiểm tra phòng khám Sản VIP, phòng chăm sóc sản phụ sau sinh", standard: "Sạch sẽ, ấm cúng, riêng tư", staff: "Trịnh Thị Thảo" },
+                    { id: 73, time: "7h15 - 7h30", task: "Chuẩn bị khăn ấm, dung dịch vệ sinh chuyên dụng sản khoa", standard: "Đầy đủ vật tư chất lượng cao", staff: "Lê Thị Thu" },
+                    { id: 74, time: "7h30 - 11h30", task: "Khám & chăm sóc vết mổ/vết tầng sinh môn cho sản phụ sau đẻ", standard: "Nhẹ nhàng, tuân thủ vô khuẩn", staff: "Trịnh Thị Thảo" },
+                    { id: 75, time: "7h30 - 11h30", task: "Hướng dẫn sản phụ cách cho con bú, massage xoa bóp tuyến sữa", standard: "Tận tình, hiệu quả", staff: "Lê Thị Thu" },
+                    { id: 76, time: "7h30 - 11h30", task: "Tư vấn dinh dưỡng sau sinh & chăm sóc trẻ sơ sinh tại nhà", standard: "Kiến thức chuẩn y khoa", staff: "Trịnh Thị Thảo" },
+                    { id: 77, time: "11h30 - 12h00", task: "Khử khuẩn dụng cụ, thay ga giường phòng chăm sóc VIP", standard: "Ga gối sạch sẽ, thay mới 100%", staff: "Lê Thị Thu" },
+                    { id: 78, time: "13h30 - 16h30", task: "Chăm sóc sản phụ ca chiều, hẹn lịch tái khám", standard: "Ghi nhận phản hồi tích cực", staff: "Trịnh Thị Thảo" },
+                    { id: 79, time: "16h30 - 17h00", task: "Bàn giao danh sách sản phụ cần theo dõi đặc biệt", standard: "Bàn giao chặt chẽ", staff: "Lê Thị Thu" }
+                ]
+            },
+            {
+                sectionId: "SEC_10",
+                sectionTitle: "X. CÁC BUỒNG KHÁM CHUYÊN KHOA KHÁC (MẮT, TMH, RHM, DA LIỄU)",
+                assignedStaff: ["Lê Thị Lan Anh", "Trần Ngọc Huyền"],
+                items: [
+                    { id: 80, time: "7h00 - 7h15", task: "Kiểm tra ghế khám RHM, máy nội soi TMH, sinh hiển vi Mắt", standard: "Thiết bị vận hành tốt", staff: "Lê Thị Lan Anh" },
+                    { id: 81, time: "7h15 - 7h30", task: "Chuẩn bị gạc, tăm bông, thuốc nhỏ mắt, dung dịch xịt mũi", standard: "Đầy đủ vật tư tiêu hao", staff: "Trần Ngọc Huyền" },
+                    { id: 82, time: "7h30 - 11h30", task: "Calling BN, hỗ trợ BS khám chuyên khoa Mắt (đo thị lực, đo nhãn áp)", standard: "Thao tác chuẩn xác", staff: "Lê Thị Lan Anh" },
+                    { id: 83, time: "7h30 - 11h30", task: "Phụ BS nội soi Tai Mũi Họng, hút dịch mũi xoang", standard: "Vô khuẩn ống soi", staff: "Trần Ngọc Huyền" },
+                    { id: 84, time: "7h30 - 11h30", task: "Phụ BS khám Răng Hàm Mặt, chuẩn bị tay khoan, vật liệu trám", standard: "Đúng quy trình nha khoa", staff: "Lê Thị Lan Anh" },
+                    { id: 85, time: "11h30 - 12h00", task: "Ngâm rửa, tiệt trùng ống nội soi TMH, dụng cụ nha khoa", standard: "Đạt chuẩn vô khuẩn Sở Y tế", staff: "Trần Ngọc Huyền" },
+                    { id: 86, time: "13h30 - 16h30", task: "Phụ khám chuyên khoa ca chiều", standard: "Đảm bảo tiến độ khám", staff: "Lê Thị Lan Anh" },
+                    { id: 87, time: "16h30 - 17h00", task: "Tắt máy nội soi, máy nha khoa, tổng vệ sinh buồng khám", standard: "An toàn, bảo quản tốt máy móc", staff: "Trần Ngọc Huyền" },
+                    { id: 88, time: "16h30 - 17h00", task: "Kiểm tra lại toàn bộ sổ sách khám chuyên khoa trong ngày", standard: "Sổ sách ghi chép đầy đủ", staff: "Lê Thị Lan Anh" },
+                    { id: 89, time: "16h30 - 17h00", task: "Bàn giao tài sản, chìa khóa phòng khám cho bảo vệ/ca sau", standard: "An toàn tài sản khoa", staff: "Trần Ngọc Huyền" }
+                ]
+            }
+        ];
+
+        // GLOBAL APP STATE
+        let appState = {
+            currentTab: 'checklist',
+            selectedDate: new Date().toISOString().split('T')[0],
+            selectedStaff: 'ALL',
+            selectedSection: 'ALL',
+            evaluations: {} // Structure: { taskId: { status: 'PASS'|'FAIL'|'KAD', note: '' } }
+        };
+
+        // CHART INSTANCES
+        let staffChartInstance = null;
+        let pieChartInstance = null;
+
+        // INITIALIZATION
+        window.addEventListener('DOMContentLoaded', () => {
+            // Set default date input
+            document.getElementById('select-date').value = appState.selectedDate;
+
+            // Populate Filter Dropdowns
+            populateFilters();
+
+            // Load data from LocalStorage
+            loadStateFromLocalStorage();
+
+            // Render UI
+            renderChecklist();
+
+            // Initialize Lucide icons
+            lucide.createIcons();
+        });
+
+        // POPULATE FILTERS
+        function populateFilters() {
+            const staffSelect = document.getElementById('select-staff');
+            const sectionSelect = document.getElementById('select-section');
+
+            // Extract Unique Staff
+            const staffSet = new Set();
+            CHECKLIST_DATA.forEach(sec => {
+                sec.assignedStaff.forEach(s => staffSet.add(s));
+            });
+
+            Array.from(staffSet).sort().forEach(staffName => {
+                const opt = document.createElement('option');
+                opt.value = staffName;
+                opt.textContent = staffName;
+                staffSelect.appendChild(opt);
+            });
+
+            // Populate Sections
+            CHECKLIST_DATA.forEach(sec => {
+                const opt = document.createElement('option');
+                opt.value = sec.sectionId;
+                opt.textContent = sec.sectionTitle;
+                sectionSelect.appendChild(opt);
+            });
+        }
+
+        // LOCAL STORAGE HANDLERS
+        function getStorageKey() {
+            return `NinhBinh_KKB_Checklist_${appState.selectedDate}`;
+        }
+
+        function loadStateFromLocalStorage() {
+            const key = getStorageKey();
+            const stored = localStorage.getItem(key);
+            if (stored) {
+                try {
+                    appState.evaluations = JSON.parse(stored);
+                } catch (e) {
+                    console.error("Error parsing stored data", e);
+                    appState.evaluations = {};
+                }
+            } else {
+                appState.evaluations = {};
+            }
+        }
+
+        function saveStateToLocalStorage() {
+            const key = getStorageKey();
+            localStorage.setItem(key, JSON.stringify(appState.evaluations));
+            updateBannerProgress();
+        }
+
+        // FILTER EVENT HANDLER
+        function handleFilterChange() {
+            const dateVal = document.getElementById('select-date').value;
+            const staffVal = document.getElementById('select-staff').value;
+            const sectionVal = document.getElementById('select-section').value;
+
+            const dateChanged = (dateVal !== appState.selectedDate);
+
+            appState.selectedDate = dateVal;
+            appState.selectedStaff = staffVal;
+            appState.selectedSection = sectionVal;
+
+            if (dateChanged) {
+                loadStateFromLocalStorage();
+            }
+
+            renderChecklist();
+            if (appState.currentTab === 'dashboard') {
+                renderDashboard();
+            }
+        }
+
+        // TAB SWITCHING
+        function switchTab(tabName) {
+            appState.currentTab = tabName;
+            
+            const btnChecklist = document.getElementById('btn-tab-checklist');
+            const btnDashboard = document.getElementById('btn-tab-dashboard');
+            const contentChecklist = document.getElementById('tab-content-checklist');
+            const contentDashboard = document.getElementById('tab-content-dashboard');
+
+            if (tabName === 'checklist') {
+                btnChecklist.className = "px-4 py-2 rounded-lg text-sm font-medium transition-all flex items-center space-x-2 bg-white text-teal-800 shadow";
+                btnDashboard.className = "px-4 py-2 rounded-lg text-sm font-medium transition-all flex items-center space-x-2 text-teal-100 hover:bg-teal-700/50";
+                contentChecklist.classList.remove('hidden');
+                contentDashboard.classList.add('hidden');
+            } else {
+                btnDashboard.className = "px-4 py-2 rounded-lg text-sm font-medium transition-all flex items-center space-x-2 bg-white text-teal-800 shadow";
+                btnChecklist.className = "px-4 py-2 rounded-lg text-sm font-medium transition-all flex items-center space-x-2 text-teal-100 hover:bg-teal-700/50";
+                contentDashboard.classList.remove('hidden');
+                contentChecklist.classList.add('hidden');
+                renderDashboard();
+            }
+        }
+
+        // GET FILTERED DATA
+        function getFilteredTasks() {
+            let filteredSections = [];
+
+            CHECKLIST_DATA.forEach(section => {
+                // Section Filter Check
+                if (appState.selectedSection !== 'ALL' && section.sectionId !== appState.selectedSection) {
+                    return;
+                }
+
+                // Filter Items by Staff
+                const matchingItems = section.items.filter(item => {
+                    if (appState.selectedStaff === 'ALL') return true;
+                    return item.staff === appState.selectedStaff;
+                });
+
+                if (matchingItems.length > 0) {
+                    filteredSections.push({
+                        ...section,
+                        items: matchingItems
+                    });
+                }
+            });
+
+            return filteredSections;
+        }
+
+        // RENDER CHECKLIST VIEW
+        function renderChecklist() {
+            const container = document.getElementById('checklist-container');
+            container.innerHTML = '';
+
+            const filteredData = getFilteredTasks();
+
+            if (filteredData.length === 0) {
+                container.innerHTML = `
+                    <div class="bg-white rounded-2xl p-12 text-center border border-slate-200">
+                        <i data-lucide="inbox" class="w-12 h-12 text-slate-300 mx-auto mb-3"></i>
+                        <h3 class="text-base font-semibold text-slate-700">Không tìm thấy công việc phù hợp</h3>
+                        <p class="text-xs text-slate-500 mt-1">Vui lòng điều chỉnh lại bộ lọc Nhân viên hoặc Khu vực.</p>
+                    </div>
+                `;
+                lucide.createIcons();
+                updateBannerProgress();
+                return;
+            }
+
+            filteredData.forEach(section => {
+                const sectionCard = document.createElement('div');
+                sectionCard.className = "bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden card-box";
+
+                let itemsHtml = '';
+                section.items.forEach(item => {
+                    const evalData = appState.evaluations[item.id] || { status: null, note: '' };
+                    const isPass = evalData.status === 'PASS';
+                    const isFail = evalData.status === 'FAIL';
+                    const isKAD = evalData.status === 'KAD';
+
+                    itemsHtml += `
+                        <div class="p-4 md:p-5 border-b border-slate-100 last:border-0 hover:bg-slate-50/50 transition">
+                            <div class="flex flex-col lg:flex-row lg:items-start justify-between gap-4">
+                                
+                                <!-- Task Details -->
+                                <div class="flex-1 space-y-1.5">
+                                    <div class="flex flex-wrap items-center gap-2">
+                                        <span class="px-2.5 py-0.5 bg-teal-50 border border-teal-200 text-teal-800 text-xs font-semibold rounded-md">
+                                            STT: ${item.id}
+                                        </span>
+                                        <span class="px-2.5 py-0.5 bg-slate-100 text-slate-700 text-xs font-medium rounded-md flex items-center">
+                                            <i data-lucide="clock" class="w-3 h-3 mr-1 text-slate-500"></i> ${item.time}
+                                        </span>
+                                        <span class="px-2.5 py-0.5 bg-amber-50 border border-amber-200 text-amber-800 text-xs font-medium rounded-md flex items-center">
+                                            <i data-lucide="user" class="w-3 h-3 mr-1 text-amber-600"></i> ${item.staff}
+                                        </span>
+                                    </div>
+
+                                    <h4 class="text-sm font-semibold text-slate-800 leading-snug">${item.task}</h4>
+                                    
+                                    <div class="text-xs text-slate-500 bg-slate-50 p-2 rounded-lg border border-slate-100">
+                                        <span class="font-medium text-slate-600">Tiêu chuẩn:</span> ${item.standard}
+                                    </div>
+                                </div>
+
+                                <!-- Action Status Buttons -->
+                                <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 lg:self-center">
+                                    <button onclick="setTaskStatus(${item.id}, 'PASS')" 
+                                        class="px-3.5 py-2 rounded-xl text-xs font-bold flex items-center justify-center space-x-1.5 transition border ${
+                                            isPass 
+                                            ? 'bg-emerald-600 text-white border-emerald-600 shadow-md shadow-emerald-200' 
+                                            : 'bg-white text-emerald-700 border-emerald-300 hover:bg-emerald-50'
+                                        }">
+                                        <i data-lucide="check-circle-2" class="w-4 h-4"></i>
+                                        <span>ĐẠT</span>
+                                    </button>
+
+                                    <button onclick="setTaskStatus(${item.id}, 'FAIL')" 
+                                        class="px-3.5 py-2 rounded-xl text-xs font-bold flex items-center justify-center space-x-1.5 transition border ${
+                                            isFail 
+                                            ? 'bg-rose-600 text-white border-rose-600 shadow-md shadow-rose-200' 
+                                            : 'bg-white text-rose-700 border-rose-300 hover:bg-rose-50'
+                                        }">
+                                        <i data-lucide="x-circle" class="w-4 h-4"></i>
+                                        <span>KHÔNG ĐẠT</span>
+                                    </button>
+
+                                    <button onclick="setTaskStatus(${item.id}, 'KAD')" 
+                                        class="px-3.5 py-2 rounded-xl text-xs font-bold flex items-center justify-center space-x-1.5 transition border ${
+                                            isKAD 
+                                            ? 'bg-amber-500 text-white border-amber-500 shadow-md shadow-amber-200' 
+                                            : 'bg-white text-amber-700 border-amber-300 hover:bg-amber-50'
+                                        }">
+                                        <i data-lucide="minus-circle" class="w-4 h-4"></i>
+                                        <span>KAD</span>
+                                    </button>
+                                </div>
+
+                            </div>
+
+                            <!-- Fail Reason / Notes Input (Shown automatically when FAIL) -->
+                            <div id="note-container-${item.id}" class="${isFail ? 'block' : 'hidden'} mt-3 pt-3 border-t border-rose-100">
+                                <label class="block text-xs font-semibold text-rose-700 mb-1 flex items-center">
+                                    <i data-lucide="alert-circle" class="w-3.5 h-3.5 mr-1"></i>
+                                    Lý do không đạt & Biên pháp khắc phục: <span class="text-rose-500 ml-1">*</span>
+                                </label>
+                                <input type="text" 
+                                    id="note-input-${item.id}"
+                                    value="${evalData.note || ''}" 
+                                    placeholder="Nhập chi tiết nguyên nhân và phương hướng xử lý..." 
+                                    onchange="updateTaskNote(${item.id}, this.value)"
+                                    class="w-full text-xs bg-rose-50/50 border border-rose-300 text-slate-800 rounded-xl p-2.5 focus:ring-2 focus:ring-rose-500 focus:outline-none transition">
+                            </div>
+                        </div>
+                    `;
+                });
+
+                sectionCard.innerHTML = `
+                    <div class="bg-gradient-to-r from-teal-50 to-slate-50 p-4 border-b border-slate-200 flex items-center justify-between">
+                        <h3 class="font-bold text-teal-900 text-sm md:text-base">${section.sectionTitle}</h3>
+                        <span class="text-xs font-semibold text-teal-700 bg-teal-100/80 px-2.5 py-1 rounded-full">
+                            ${section.items.length} công việc
+                        </span>
+                    </div>
+                    <div class="divide-y divide-slate-100">
+                        ${itemsHtml}
+                    </div>
+                `;
+
+                container.appendChild(sectionCard);
+            });
+
+            lucide.createIcons();
+            updateBannerProgress();
+        }
+
+        // UPDATE TASK STATUS
+        function setTaskStatus(taskId, status) {
+            if (!appState.evaluations[taskId]) {
+                appState.evaluations[taskId] = { status: null, note: '' };
+            }
+
+            // Toggle if clicking the same button
+            if (appState.evaluations[taskId].status === status) {
+                appState.evaluations[taskId].status = null;
+            } else {
+                appState.evaluations[taskId].status = status;
+            }
+
+            saveStateToLocalStorage();
+            renderChecklist();
+        }
+
+        // UPDATE TASK NOTE
+        function updateTaskNote(taskId, noteValue) {
+            if (!appState.evaluations[taskId]) {
+                appState.evaluations[taskId] = { status: 'FAIL', note: '' };
+            }
+            appState.evaluations[taskId].note = noteValue;
+            saveStateToLocalStorage();
+        }
+
+        // UPDATE BANNER PROGRESS BAR
+        function updateBannerProgress() {
+            const filteredTasks = [];
+            getFilteredTasks().forEach(sec => filteredTasks.push(...sec.items));
+            
+            const total = filteredTasks.length;
+            if (total === 0) {
+                document.getElementById('banner-progress-text').textContent = '0/0 (0%)';
+                document.getElementById('banner-progress-bar').style.width = '0%';
+                return;
+            }
+
+            let evaluatedCount = 0;
+            filteredTasks.forEach(item => {
+                const evalData = appState.evaluations[item.id];
+                if (evalData && evalData.status) {
+                    evaluatedCount++;
+                }
+            });
+
+            const pct = Math.round((evaluatedCount / total) * 100);
+            document.getElementById('banner-progress-text').textContent = `${evaluatedCount}/${total} (${pct}%)`;
+            document.getElementById('banner-progress-bar').style.width = `${pct}%`;
+        }
+
+        // RESET CURRENT FILTERED DATA
+        function resetCurrentViewData() {
+            if (confirm("Bạn có chắc chắn muốn xóa toàn bộ đánh giá của bộ lọc hiện tại trong ngày này?")) {
+                const filteredTasks = [];
+                getFilteredTasks().forEach(sec => filteredTasks.push(...sec.items));
+                
+                filteredTasks.forEach(item => {
+                    delete appState.evaluations[item.id];
+                });
+
+                saveStateToLocalStorage();
+                renderChecklist();
+                if (appState.currentTab === 'dashboard') {
+                    renderDashboard();
+                }
+            }
+        }
+
+        // RENDER DASHBOARD
+        function renderDashboard() {
+            const allFiltered = [];
+            getFilteredTasks().forEach(sec => allFiltered.push(...sec.items));
+
+            const total = allFiltered.length;
+            let passCount = 0;
+            let failCount = 0;
+            let kadCount = 0;
+            let pendingCount = 0;
+
+            const failList = [];
+
+            allFiltered.forEach(item => {
+                const evalData = appState.evaluations[item.id];
+                if (!evalData || !evalData.status) {
+                    pendingCount++;
+                } else if (evalData.status === 'PASS') {
+                    passCount++;
+                } else if (evalData.status === 'FAIL') {
+                    failCount++;
+                    failList.push({
+                        ...item,
+                        note: evalData.note || 'Chưa ghi nhận lý do'
+                    });
+                } else if (evalData.status === 'KAD') {
+                    kadCount++;
+                }
+            });
+
+            // Set STAT Cards
+            document.getElementById('stat-total').textContent = total;
+            document.getElementById('stat-pass').textContent = passCount;
+            document.getElementById('stat-pass-pct').textContent = total ? `${Math.round((passCount/total)*100)}%` : '0%';
+            
+            document.getElementById('stat-fail').textContent = failCount;
+            document.getElementById('stat-fail-pct').textContent = total ? `${Math.round((failCount/total)*100)}%` : '0%';
+
+            document.getElementById('stat-kad').textContent = kadCount;
+            document.getElementById('stat-kad-pct').textContent = total ? `${Math.round((kadCount/total)*100)}%` : '0%';
+
+            document.getElementById('stat-pending').textContent = pendingCount;
+            document.getElementById('stat-pending-pct').textContent = total ? `${Math.round((pendingCount/total)*100)}%` : '0%';
+
+            // Render Fail Table
+            const failTableBody = document.getElementById('fail-table-body');
+            document.getElementById('fail-count-badge').textContent = `${failList.length} sự cố`;
+            failTableBody.innerHTML = '';
+
+            if (failList.length === 0) {
+                failTableBody.innerHTML = `
+                    <tr>
+                        <td colspan="5" class="text-center p-6 text-slate-400 italic">
+                            Không có công việc nào bị đánh giá "Không đạt".
+                        </td>
+                    </tr>
+                `;
+            } else {
+                failList.forEach(item => {
+                    // Find Section Title
+                    const sec = CHECKLIST_DATA.find(s => s.items.some(i => i.id === item.id));
+                    const tr = document.createElement('tr');
+                    tr.className = "hover:bg-rose-50/40 transition";
+                    tr.innerHTML = `
+                        <td class="p-3 font-medium text-slate-700 text-xs">${sec ? sec.sectionTitle.split('.')[0] : ''}</td>
+                        <td class="p-3 font-semibold text-slate-800 text-xs">${item.staff}</td>
+                        <td class="p-3 text-slate-500 text-xs">${item.time}</td>
+                        <td class="p-3 text-slate-800 text-xs font-medium">${item.task}</td>
+                        <td class="p-3 text-rose-700 font-semibold text-xs bg-rose-50/80 rounded-lg">${item.note}</td>
+                    `;
+                    failTableBody.appendChild(tr);
+                });
+            }
+
+            // Render Charts
+            renderCharts();
+        }
+
+        // CHARTS LOGIC
+        function renderCharts() {
+            // Chart 1: Staff Performance Bar
+            const staffStats = {};
+            
+            // Collect all unique staff in filtered set
+            getFilteredTasks().forEach(sec => {
+                sec.items.forEach(item => {
+                    if (!staffStats[item.staff]) {
+                        staffStats[item.staff] = { total: 0, pass: 0 };
+                    }
+                    staffStats[item.staff].total++;
+                    const evalData = appState.evaluations[item.id];
+                    if (evalData && evalData.status === 'PASS') {
+                        staffStats[item.staff].pass++;
+                    }
+                });
+            });
+
+            const staffLabels = Object.keys(staffStats);
+            const staffPassRates = staffLabels.map(s => {
+                const st = staffStats[s];
+                return st.total ? Math.round((st.pass / st.total) * 100) : 0;
+            });
+
+            const ctxStaff = document.getElementById('chart-staff-performance').getContext('2d');
+            if (staffChartInstance) staffChartInstance.destroy();
+
+            staffChartInstance = new Chart(ctxStaff, {
+                type: 'bar',
+                data: {
+                    labels: staffLabels,
+                    datasets: [{
+                        label: '% Tỷ lệ Đạt',
+                        data: staffPassRates,
+                        backgroundColor: '#0d9488',
+                        borderRadius: 8,
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            max: 100,
+                            ticks: { callback: v => v + '%' }
+                        }
+                    },
+                    plugins: {
+                        legend: { display: false }
+                    }
+                }
+            });
+
+            // Chart 2: Status Breakdown Pie
+            let pass = 0, fail = 0, kad = 0, pending = 0;
+            getFilteredTasks().forEach(sec => {
+                sec.items.forEach(item => {
+                    const evalData = appState.evaluations[item.id];
+                    if (!evalData || !evalData.status) pending++;
+                    else if (evalData.status === 'PASS') pass++;
+                    else if (evalData.status === 'FAIL') fail++;
+                    else if (evalData.status === 'KAD') kad++;
+                });
+            });
+
+            const ctxPie = document.getElementById('chart-status-pie').getContext('2d');
+            if (pieChartInstance) pieChartInstance.destroy();
+
+            pieChartInstance = new Chart(ctxPie, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Đạt', 'Không Đạt', 'KAD', 'Chưa Đánh Giá'],
+                    datasets: [{
+                        data: [pass, fail, kad, pending],
+                        backgroundColor: ['#10b981', '#f43f5e', '#f59e0b', '#cbd5e1']
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { position: 'bottom' }
+                    }
+                }
+            });
+        }
+
+        // SUMMARY MODAL FOR BRIEFING
+        function exportSummaryModal() {
+            const modal = document.getElementById('modal-summary');
+            const textarea = document.getElementById('summary-text-area');
+
+            const dateStr = appState.selectedDate;
+            const allFiltered = [];
+            getFilteredTasks().forEach(sec => allFiltered.push(...sec.items));
+
+            const total = allFiltered.length;
+            let pass = 0, fail = 0, kad = 0, pending = 0;
+            const fails = [];
+
+            allFiltered.forEach(item => {
+                const evalData = appState.evaluations[item.id];
+                if (!evalData || !evalData.status) pending++;
+                else if (evalData.status === 'PASS') pass++;
+                else if (evalData.status === 'FAIL') {
+                    fail++;
+                    fails.push(`- [STT ${item.id}] ${item.staff} (${item.time}): ${item.task} -> LÝ DO: ${evalData.note || 'Chưa ghi'}`);
+                }
+                else if (evalData.status === 'KAD') kad++;
+            });
+
+            const passPct = total ? Math.round((pass/total)*100) : 0;
+
+            let text = `=== BÁO CÁO KIỂM TRA CÔNG VIỆC HÀNG NGÀY ===\n`;
+            text += `Đơn vị: BV Sản Nhi Ninh Bình - Khoa Khám Bệnh\n`;
+            text += `Ngày kiểm tra: ${dateStr}\n`;
+            text += `Phạm vi lọc: Nhân viên [${appState.selectedStaff}] | Khu vực [${appState.selectedSection}]\n`;
+            text += `--------------------------------------------------\n`;
+            text += `TỔNG SỐ CÔNG VIỆC: ${total}\n`;
+            text += `- Đạt: ${pass} (${passPct}%)\n`;
+            text += `- Không đạt: ${fail}\n`;
+            text += `- Không áp dụng (KAD): ${kad}\n`;
+            text += `- Chưa đánh giá: ${pending}\n`;
+            text += `--------------------------------------------------\n`;
+            
+            if (fails.length > 0) {
+                text += `DANH SÁCH LỖI / KHÔNG ĐẠT CẦN KHẮC PHỤC:\n`;
+                text += fails.join('\n') + `\n`;
+            } else {
+                text += `KHÔNG CÓ LỖI BÁO CÁO (100% ĐẠT TIÊU CHUẨN).\n`;
+            }
+
+            text += `--------------------------------------------------\n`;
+            text += `Người báo cáo: .................................`;
+
+            textarea.value = text;
+            modal.classList.remove('hidden');
+        }
+
+        function closeSummaryModal() {
+            document.getElementById('modal-summary').classList.add('hidden');
+        }
+
+        function copySummaryText() {
+            const textarea = document.getElementById('summary-text-area');
+            textarea.select();
+            document.execCommand('copy');
+            alert("Đã sao chép nội dung báo cáo vào bộ nhớ tạm!");
+        }
+    </script>
+</body>
+</html>
